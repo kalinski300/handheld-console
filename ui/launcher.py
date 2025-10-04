@@ -45,14 +45,16 @@ else:
 
 font = pygame.font.SysFont(None, 48)
 
+running_game = None
 
 def launch_game(system, romfile):
+    global running_game
     rom_path = os.path.join(ROM_ROOT, system.lower(), romfile)
 
     # --- Dev mode (Laptop) ---
     # Just simulate launching
     print(f"[DEV] Pretending to launch {system}: {rom_path}")
-    subprocess.run(["echo", f"Launching {system}: {romfile}"])
+    running_game = subprocess.Popen(["sleep", "9999"])  # fake long process
 
     # --- Real mode (Pi) ---
     # Uncomment and adjust paths when on Pi:
@@ -64,6 +66,13 @@ def launch_game(system, romfile):
     # core = cores.get(system)
     # if core:
     #     subprocess.run(["retroarch", "-L", core, rom_path])
+
+def quit_game():
+    global running_game
+    if running_game and running_game.poll() is None:  # still running
+        print("[DEV] Closing game...")
+        running_game.terminate()
+        running_game = None
 
 def draw_menu():
     screen.fill(BLACK)
@@ -129,5 +138,18 @@ while running:
                 games = scan_roms(current_system, SYSTEMS[current_system])
                 selected_index = 0
 
+        # Keyboard quit (ESC)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                quit_game()
+
+        # Controller quit combo: Start + Select
+        if event.type == pygame.JOYBUTTONDOWN:
+            if event.button == 7:  # Start button
+                if controller.get_button(6):  # Select is already held
+                    quit_game()
+            if event.button == 6:  # Select button
+                if controller.get_button(7):  # Start is already held
+                    quit_game()
 pygame.quit()
 sys.exit()
