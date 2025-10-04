@@ -16,7 +16,7 @@ WHITE = (255, 255, 255)
 HIGHLIGHT = (50, 200, 50)
 
 # Fake game list
-games = ["Super Mario", "Legend of Zelda", "Metroid"]
+games = ["Super Mario", "Legend of Zelda", "Metroid", "Mega Man"]
 selected_index = 0
 
 # Try to init controller
