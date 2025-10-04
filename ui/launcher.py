@@ -2,6 +2,10 @@ import pygame
 import sys
 import os
 import subprocess
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import threading
+import time
 
 pygame.init()
 pygame.joystick.init()
@@ -34,6 +38,61 @@ system_index = 0
 current_system = system_names[system_index]
 games = scan_roms(current_system, SYSTEMS[current_system])
 selected_index = 0
+
+
+class ROMHandler(FileSystemEventHandler):
+    def on_created(self, event):
+        global games, selected_index, current_system
+        if event.is_directory:
+            return
+
+        _, ext = os.path.splitext(event.src_path)
+        ext = ext.lower()
+
+        # Map extensions to systems
+        EXT_TO_SYSTEM = {
+            ".nes": "NES",
+            ".sfc": "SNES",
+            ".gba": "GBA"
+        }
+
+        if ext in EXT_TO_SYSTEM:
+            system = EXT_TO_SYSTEM[ext]
+            dest_dir = os.path.join(ROM_ROOT, system.lower())
+            os.makedirs(dest_dir, exist_ok=True)
+            dest_path = os.path.join(dest_dir, os.path.basename(event.src_path))
+
+            try:
+                # Move the file into the proper system directory
+                os.replace(event.src_path, dest_path)
+                print(f"Moved {event.src_path} → {dest_path}")
+
+                # Refresh games if we’re currently on this system
+                if system == current_system:
+                    games = scan_roms(current_system, SYSTEMS[current_system])
+                    selected_index = 0
+            except Exception as e:
+                print(f"Failed to move {event.src_path}: {e}")
+        else:
+            print(f"Ignoring unsupported file: {event.src_path}")
+
+DOWNLOADS = os.path.join(os.path.dirname(__file__), "..", "downloads")
+
+def start_watcher():
+    event_handler = ROMHandler()
+    observer = Observer()
+    observer.schedule(event_handler, DOWNLOADS, recursive=False)
+    observer.start()
+    print("Watching downloads/ for new ROMs...")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+# Start watcher in background
+threading.Thread(target=start_watcher, daemon=True).start()
 
 # Controller init
 if pygame.joystick.get_count() > 0:
