@@ -12,7 +12,7 @@ pygame.joystick.init()
 
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-font = pygame.font.SysFont(None, 48)
+font = pygame.font.Font("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
 pygame.display.set_caption("Handheld Launcher Prototype")
 
 BLACK = (0, 0, 0)
