@@ -135,22 +135,15 @@ def quit_game():
         running_game = None
 
 def draw_menu():
-    screen.fill((0, 0, 0))  # Black background
-
-    # Title at the top
     title_text = font.render(f"{current_system} Library", True, (0, 200, 255))
     screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 40))
 
-    # Draw games list
     y = 120
     for idx, game in enumerate(games):
-        if idx == selected_index:
-            color = (255, 255, 0)   # yellow highlight
-        else:
-            color = (255, 255, 255) # white
+        color = (255, 255, 0) if idx == selected_index else (255, 255, 255)
         text = font.render(game, True, color)
         screen.blit(text, (100, y))
-        y += 50  # spacing between items
+        y += 50
 
 clock = pygame.time.Clock()
 running = True
