@@ -11,7 +11,8 @@ pygame.init()
 pygame.joystick.init()
 
 WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+font = pygame.font.SysFont(None, 48)
 pygame.display.set_caption("Handheld Launcher Prototype")
 
 BLACK = (0, 0, 0)
@@ -148,15 +149,16 @@ def draw_menu():
 
     pygame.display.flip()
 
+clock = pygame.time.Clock()
 running = True
-while running:
-    draw_menu()
 
+while running:
+    # --- Input handling ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-        # Keyboard
+        # Keyboard navigation
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN:
                 selected_index = (selected_index + 1) % len(games)
@@ -164,6 +166,7 @@ while running:
                 selected_index = (selected_index - 1) % len(games)
             elif event.key == pygame.K_RETURN:
                 print(f"Launching {current_system}: {games[selected_index]}")
+                launch_game(current_system, games[selected_index])
             elif event.key == pygame.K_RIGHT:
                 system_index = (system_index + 1) % len(system_names)
                 current_system = system_names[system_index]
@@ -174,6 +177,8 @@ while running:
                 current_system = system_names[system_index]
                 games = scan_roms(current_system, SYSTEMS[current_system])
                 selected_index = 0
+            elif event.key == pygame.K_ESCAPE:
+                quit_game()
 
         # Controller buttons
         if event.type == pygame.JOYBUTTONDOWN:
@@ -197,18 +202,20 @@ while running:
                 games = scan_roms(current_system, SYSTEMS[current_system])
                 selected_index = 0
 
-        # Keyboard quit (ESC)
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                quit_game()
-
         # Controller quit combo: Start + Select
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:  # Start button
-                if controller.get_button(6):  # Select is already held
+                if controller.get_button(6):  # Select held
                     quit_game()
             if event.button == 6:  # Select button
-                if controller.get_button(7):  # Start is already held
+                if controller.get_button(7):  # Start held
                     quit_game()
+
+    # --- Drawing ---
+    screen.fill((0, 0, 0))  # Clear screen each frame
+    draw_menu()             # Your menu-drawing function
+    pygame.display.flip()   # Update display
+
+    clock.tick(60)          # Cap at 60 FPS
 pygame.quit()
 sys.exit()
